@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ms-test                # שם האפליקציה בארגו
+  namespace: argocd            # תמיד בניימספייס argocd
+spec:
+  project: default
+
+  #—— מקור (Git) ——#
+  source:
+    repoURL: https://github.com/bechor25/ms_test.git
+    targetRevision: main       # הענף – שנה אם צריך
+    path: HelloApi/k8s                  # תיקייה שבה המניפסטים
+    # אם אתה משתמש ב-Helm/Kustomize—הוסף כאן type & values
+
+  #—— יעד (האשכול) ——#
+  destination:
+    server: https://kubernetes.default.svc   # האשכול הפנימי
+    namespace: apps                       # לאן לפרוס — שנה אם רצית apps/dev וכד'.
+
+  #—— מדיניות סנכרון ——#
+  syncPolicy:
+    automated:
+      prune: true        # מחק משאבים שהוסרו מה-git
+      selfHeal: true     # שחזר משאבים שנעו ידנית
+    syncOptions:
+      - CreateNamespace=true   # אם namespace ה
