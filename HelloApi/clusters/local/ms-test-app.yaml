@@ -9,14 +9,19 @@ spec:
         repoURL: https://github.com/bechor25/ms_test.git
         revision: main
         directories:
-          # ← כל תיקייה טופ־לבל בריפו (HelloApi, Payments …)
+          # תיקיות-שירות ברמת שורש
           - path: "*"
-            exclude: |
-              clusters/**
-              */k8s/**                 # אל תיכנס לתת-תיקיות k8s
+
+          # התיקייה k8s עצמה (כדי שלא ייווצר כ־App בשם k8s)
+          - path: "*/k8s"
+            exclude: true
+
+          # אם יש clusters/ לשימוש אחר – לא לכלול
+          - path: "clusters/**"
+            exclude: true
   template:
     metadata:
-      name: "{{path.basename}}"        # HelloApi, Payments …
+      name: "{{path.basename}}"        # שם האפליקציה = שם התיקייה (HelloApi)
     spec:
       project: default
       source:
@@ -31,4 +36,4 @@ spec:
           prune: true
           selfHeal: true
         syncOptions:
-          - CreateNamespace=true       # יוצרת את apps אם לא קיים
+          - CreateNamespace=true
