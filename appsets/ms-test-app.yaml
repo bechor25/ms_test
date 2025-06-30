@@ -2,40 +2,31 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: microservices
-  namespace: argocd
+  namespace: argocd            # ApplicationSet חייב לחיות ב-argocd
 spec:
-  goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
   generators:
-  - matrix:
-      generators:
-      - list:
-          elements:
-          - cluster: eksmgmt
-            url: https://kubernetes.default.svc
-      - git:
-          repoURL: https://github.com/bechor25/ms_test.git
-          revision: main
-          directories:
-          - path: 'apps/*'
-  template:      
+    - git:
+        repoURL: https://github.com/bechor25/ms_test.git
+        revision: main
+        directories:
+          # כל תת-תיקייה בריפו שיש בה k8s/ – לדוגמה HelloApi/k8s
+          - path: "apps/k8s"
+            
+  template:
     metadata:
-      name: '{{index .path.segments 1}}-{{.cluster}}'
+      name: "{{path.basename}}"             # שם האפליקציה = שם התיקייה (HelloApi)
     spec:
-      project: '{{.cluster}}'
+      project: default
       source:
         repoURL: https://github.com/bechor25/ms_test.git
         targetRevision: main
-        path: '{{.path.path}}'      
-        helm:
-          releaseName: '{{index .path.segments 1}}'
+        path: "apps/k8s"                # <folder>/k8s מניפסטים
       destination:
-        server: '{{.url}}'
-        namespace: '{{index .path.segments 1}}'
+        server: https://kubernetes.default.svc
+        namespace: apps                     # ייווצר במידת הצורך
       syncPolicy:
-        syncOptions:
-          - CreateNamespace=true  
         automated:
-          prune: true
-          selfHeal: true
-          allowEmpty: true
+          prune: true                       # הסר משאבים שהוסרו בגיט
+          selfHeal: true                    # שחזר משאבים שנמחקו ידנית
+        syncOptions:
+          - CreateNamespace=true            # צור את apps אם לא קיים
